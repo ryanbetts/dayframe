@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Editor</title>
+        <style>
+
+        </style>
+        <script src="https://aframe.io/releases/0.3.0/aframe.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <meta name="viewport" content="width=device-width, intial-scale=1"></meta>
+    </head>
+    <body>
+        <a-scene antialias="true">
+            <a-entity position="0 0.5 0" id="remote">
+                <a-box id="body" position="0 0 0" rotation="0 0 0" width="1" height="0.1" depth="2"  color="#4CC3D9"></a-box>
+                <a-box id="touchpad" position="0 .05 -.5" rotation="0 0 0" width="0.75" height="0.1" depth="0.75"  color="#0000FF">
+                    <a-sphere id="touchpad-contact" visible="false" position="0 0.05 0" radius="0.05" color="pink"></sphere>
+                </a-box>
+                <a-box id="app-btn" position="0 .05 .2" rotation="0 0 0" width="0.4" height="0.1" depth="0.4"  color="#0000FF"></a-box>
+                <a-box id="home-btn" position="0 .05 .7" rotation="0 0 0" width="0.4" height="0.1" depth="0.4"  color="#0000FF"></a-box>
+            </a-entity>
+            <a-sky color="#ECECEC"></a-sky>
+            <a-entity position="0 0 3.8">
+                <a-camera></a-camera>
+            </a-entity>
+        </a-scene>
+        <script>
+            var socket = io.connect('', { query: 'type=scene' });
+            var remote = document.querySelector('#remote');
+            var touchpadObj = document.querySelector('#touchpad');
+            var touchpadContactObj = document.querySelector('#touchpad-contact');
+            var appBtnObj = document.querySelector('#app-btn');
+            var homeBtnObj = document.querySelector('#home-btn');
+
+            // connection events
+            socket.on('connect', function () {
+                console.log('connected as scene');
+            });
+            socket.on('disconnect', function () {
+                console.log('disconnected as scene');
+            });
+            socket.on('remote:connected', function () {
+                console.log('remote:connected');
+            });
+            socket.on('remote:disconnected', function () {
+                console.log('remote:disconnected');
+            });
+
+            // orientation events
+            socket.on('orientation:change', function (evt) {
+                remote.setAttribute('rotation', evt);
+            });
+
+            // track pad events
+            socket.on('trackpad:touchstart', function () {
+                touchpadContactObj.setAttribute('visible',true);
+            })
+            socket.on('trackpad:touchmove', function (evt) {
+                var touchpadWidth = 0.75;
+                var touchpadDepth = 0.75;
+                var touchpad_y = 0.05;
+                var touchpad_x = evt.x * touchpadWidth - touchpadWidth/2;
+                var touchpad_z = evt.y * touchpadDepth - touchpadDepth/2;
+                touchpadContactObj.setAttribute('position',touchpad_x+' '+touchpad_y+' '+touchpad_z);
+            })
+            socket.on('trackpad:touchend', function () {
+                touchpadContactObj.setAttribute('visible',false);
+            })
+            var trackpadColors = ['pink','orange','blue','yellow','green'];
+            var trackpadColorIndex = 0;
+            socket.on('trackpad:click', function () {
+                touchpadObj.setAttribute('color', trackpadColors[trackpadColorIndex]);
+                trackpadColorIndex++;
+                if (trackpadColorIndex > trackpadColors.length-1) trackpadColorIndex = 0;
+            });
+
+            // other buttons
+            var appBtnColors = ['pink','orange','blue','yellow','green'];
+            var appBtnColorIndex = 0;
+            socket.on('app:tap', function () {
+                appBtnObj.setAttribute('color', appBtnColors[appBtnColorIndex]);
+                appBtnColorIndex++;
+                if (appBtnColorIndex > appBtnColors.length-1) appBtnColorIndex = 0;
+            });
+            var homeBtnColors = ['pink','orange','blue','yellow','green'];
+            var homeBtnColorIndex = 0;
+            socket.on('home:tap', function () {
+                homeBtnObj.setAttribute('color', homeBtnColors[homeBtnColorIndex]);
+                homeBtnColorIndex++;
+                if (homeBtnColorIndex > homeBtnColors.length-1) homeBtnColorIndex = 0;
+            });
+        </script>
+    </body>
+</html>

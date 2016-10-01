@@ -1,0 +1,249 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Remote</title>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="http://hammerjs.github.io/dist/hammer.min.js"></script>
+        <style>
+            body {
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                padding: 0; margin: 0;
+            }
+            #remote-body {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                width: 160px;
+                background-color: whitesmoke;
+                border: 1px solid #ddd;
+                border-radius: 12px;
+                padding: 30px;
+                box-shadow: 0 6px 4px #ddd;
+            }
+            #connection-status {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: monospace;
+                height: 32px;
+                width: 160px;
+                border-radius: 3px;
+                background-color: whitesmoke;
+            }
+            #connection-status.connected {
+                background: green;
+                color: #fff;
+            }
+            #trackpad {
+                width: 180px;
+                height: 180px;
+                border-radius: 90px;
+                background-image:  radial-gradient(160px, #FFF 0%, #DDD 80%);
+                border: 1px solid #bbb;
+            }
+            #trackpad:active {
+                background-image:  radial-gradient(160px, blue 0%, #DDD 80%);
+            }
+            #app-button {
+                margin-top: 30px;
+                width: 80px;
+                height: 80px;
+                border-radius: 40px;
+                background-image:  radial-gradient(80px, #FFF 0%, #DDD 80%);
+                border: 1px solid #bbb;
+            }
+            #app-button:active {
+                background-image:  radial-gradient(80px, blue 0%, #DDD 80%);
+            }
+            #home-button {
+                margin-top: 30px;
+                width: 80px;
+                height: 80px;
+                border-radius: 40px;
+                background-image:  radial-gradient(80px, #FFF 0%, #DDD 80%);
+                border: 1px solid #bbb;
+            }
+            #home-button:active {
+                background-image:  radial-gradient(80px, blue 0%, #DDD 80%);
+            }
+            #trackpad-contact-point {
+                position: absolute;
+                width: 32px;
+                height: 32px;
+                border-radius: 40px;
+                background: pink;
+            }
+            .hidden {
+                display: none;
+            }
+        </style>
+        <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    </head>
+    <body>
+        <div id="connection-status">
+            No connection
+        </div>
+        <div id="remote-body">
+            <div id="trackpad">
+                <div id="trackpad-contact-point" class="hidden"></div>
+            </div>
+            <div id="app-button"></div>
+            <div id="home-button"></div>
+        </div>
+        <script>
+
+            /**
+             * Create Socket
+             */
+            var socket = io.connect('', { query: 'type=remote' });
+
+            /**
+             * UI Elements
+             */
+            var trackpadEl = document.querySelector('#trackpad');
+            var trackpadContactEl = document.querySelector('#trackpad-contact-point');
+            var connectionEl = document.querySelector('#connection-status');
+            var homeBtnEl = document.querySelector('#home-button');
+            var appBtnEl = document.querySelector('#app-button');
+
+            /**
+             * Create Hammer objects for gesture detection
+             */
+            var trackpadHammer = new Hammer(trackpadEl);
+            var homeBtnHammer = new Hammer(homeBtnEl);
+            var appBtnHammer = new Hammer(appBtnEl);
+
+            /**
+             * Handlers
+             */
+            var updateConnectionStatus = function (state) {
+                var status = 'No connection';
+                if (state.remoteConnected && state.sceneConnected) {
+                    status = 'Connected';
+                    connectionEl.innerHTML = status;
+                    connectionEl.classList.add('connected');
+                } else if (state.remoteConnected && !state.sceneConnected) {
+                    status = 'Waiting for scene...';
+                    connectionEl.innerHTML = status;
+                    connectionEl.classList.remove('connected');
+                } else {
+                    connectionEl.innerHTML = status;
+                    connectionEl.classList.remove('connected');
+                }
+            }
+            var handleWelcome = function (state) {
+                console.log('welcome', state);
+                updateConnectionStatus(state);
+            }
+            var handleSocketConnection = function () {
+                console.log('connected as remote');
+            };
+            var handleSocketDisconnection = function () {
+                console.log('remote:disconnected');
+            };
+            var handleSceneConnected = function (state) {
+                console.log('scene:connected', state);
+                updateConnectionStatus(state);
+            }
+            var handleSceneDisconnected = function (state) {
+                console.log('scene:disconnected', state);
+                updateConnectionStatus(state);
+            }
+            var handleMotionEvent = function (event) {
+                socket.emit('motion:change', {
+                    acceleration: event.acceleration,
+                    accelerationIncludingGravity: event.accelerationIncludingGravity,
+                    rotationRate: event.rotationRate
+                });
+            }
+            var handleOrientationEvent = function (event) {
+                var x = event.beta;
+                var y = event.alpha;
+                var z = -event.gamma;
+                socket.emit('orientation:change', {
+                    x: x,
+                    y: y,
+                    z: z
+                });
+            }
+            var firstTapTime = null;
+            var secondTapTime = null;
+
+            /**
+             * Events
+             */
+
+            // socket connection events
+            socket.on('welcome', handleWelcome);
+            socket.on('scene:connected', handleSceneConnected);
+            socket.on('scene:disconnected', handleSceneDisconnected);
+            socket.on('connect', handleSocketConnection);
+            socket.on('disconnect', handleSocketDisconnection);
+
+            // device motion and orientation
+            window.addEventListener('devicemotion', handleMotionEvent, true);
+            window.addEventListener('deviceorientation', handleOrientationEvent, true);
+
+            // prevent the remote from moving around on the page
+            window.addEventListener('touchstart', function (evt) {
+                evt.preventDefault();
+            });
+
+            // button elements
+            trackpadEl.addEventListener('touchstart', function (evt) {
+                socket.emit('trackpad:touchstart');
+                trackpadContactEl.classList.remove('hidden');
+            });
+            trackpadEl.addEventListener('touchmove', function (evt) {
+                var rect = trackpadEl.getBoundingClientRect();
+                var origin_x = rect.left;
+                var origin_y = rect.top;
+                var touch_x = evt.pageX;
+                var touch_y = evt.pageY;
+                trackpadContactEl.style.left = touch_x + 'px';
+                trackpadContactEl.style.top = touch_y + 'px';
+                // send as percentage
+                var computed_x = (touch_x - origin_x) / rect.width;
+                var computed_y = (touch_y - origin_y) / rect.height;
+                if (computed_x < 0 || computed_x > 1 || computed_y < 0 || computed_y > 1) return;
+                socket.emit('trackpad:touchmove', {
+                    x: computed_x,
+                    y: computed_y
+                });
+            });
+            trackpadEl.addEventListener('touchend', function (evt) {
+                socket.emit('trackpad:touchend');
+                trackpadContactEl.classList.add('hidden');
+            });
+            trackpadHammer.on('doubletap', function (evt) {
+                socket.emit('trackpad:click');
+            });
+            trackpadHammer.on('swipeleft', function (evt) {
+                socket.emit('trackpad:swipeleft');
+            });
+            trackpadHammer.on('swiperight', function (evt) {
+                socket.emit('trackpad:swiperight');
+            });
+            trackpadHammer.on('swipeup', function (evt) {
+                socket.emit('trackpad:swipeup');
+            });
+            trackpadHammer.on('swipedown', function (evt) {
+                socket.emit('trackpad:swipedown');
+            });
+            homeBtnHammer.on('tap', function (evt) {
+                socket.emit('home:tap');
+            });
+            appBtnHammer.on('tap', function (evt) {
+                socket.emit('app:tap');
+            });
+        </script>
+    </body>
+</html>
