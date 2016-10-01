@@ -1,3 +1,5 @@
+*Note: this is a brand spankin' new project. Would love feedback in the form of issues and pull requests :) Hope some folks find this useful.*
+
 # Dayframe
 A boilerplate project to use their smartphoens to simulate the Daydream remote in aframe projects, using websockets. 
 
