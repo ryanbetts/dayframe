@@ -17,6 +17,7 @@ Before you start, make sure you've got Node and npm installed on your system.
 ## Getting started
 
 There are two URLs of interest to you:
+
 1. `http://localhost:3000/remote` which is what you will navigate to on your remote device.
 2. `http://localhost:3000/scene` which is where your Aframe scene will live.
 
@@ -27,9 +28,9 @@ It will show you visual feedback of the events being transmitted by your remote 
 
 These are a list of events you can listen for in your scene. The events can be subscribed to as follows:
 
-  socket.on('remote:connected', function(evt) {
-    console.log('A remoted has connected to the scene',evt);
-  })
+    socket.on('remote:connected', function(evt) {
+      console.log('A remoted has connected to the scene',evt);
+    })
 
 ### Remote events 
 + `remote:connected` - when a remote connected to the scene
