@@ -10,14 +10,19 @@
         <meta name="viewport" content="width=device-width, intial-scale=1"></meta>
     </head>
     <body>
-        <a-scene antialias="true">
-            <a-entity position="0 0.5 0" id="remote">
+        <a-scene antialias="true" id="scene">
+            <a-box id="laserpointer" visible="true" position="0 0 0" width="0.1" depth="0.1" height="0.1"></a-box>
+            <a-entity position="0 0 0" id="remote">
+                <a-entity id="brush" raycaster="objects: .drawable; far: 15" position="0 0 0" rotation="0 0 0"></a-entity>
                 <a-box id="body" position="0 0 0" rotation="0 0 0" width="1" height="0.1" depth="2"  color="#4CC3D9"></a-box>
-                <a-box id="touchpad" position="0 .05 -.5" rotation="0 0 0" width="0.75" height="0.1" depth="0.75"  color="#0000FF">
+                <a-box id="touchpad" position="0 .05 -.5" rotation="0 0 0" width="0.75" height="0.1" depth="0.75" color="#0000FF">
                     <a-sphere id="touchpad-contact" visible="false" position="0 0.05 0" radius="0.05" color="pink"></sphere>
                 </a-box>
                 <a-box id="app-btn" position="0 .05 .2" rotation="0 0 0" width="0.4" height="0.1" depth="0.4"  color="#0000FF"></a-box>
                 <a-box id="home-btn" position="0 .05 .7" rotation="0 0 0" width="0.4" height="0.1" depth="0.4"  color="#0000FF"></a-box>
+            </a-entity>
+            <a-entity position="0 2 -5" id="canvas" class="drawable">
+                <a-plane width="16" height="10" color="magenta"></a-plane>
             </a-entity>
             <a-sky color="#ECECEC"></a-sky>
             <a-entity position="0 0 3.8">
@@ -51,9 +56,50 @@
                 remote.setAttribute('rotation', evt);
             });
 
+            var shitNumber = 0;
+            var shouldDrawShit = false;
+            var scene = document.querySelector('#scene');
+            var laserpointer = document.querySelector('#laserpointer');
+            var canvas = document.querySelector('#canvas');
+            var brush = document.querySelector('#brush');
+            var now = new Date().getTime();
+            canvas.addEventListener('raycaster-intersected', function (evt) {
+                laserpointer.setAttribute('position',evt.detail.intersection.point);
+                if (!shouldDrawShit) return;
+                var dot = document.createElement('a-sphere');
+                var newNow = new Date().getTime();
+                console.log('delay',now-newNow);
+                now = newNow;
+                var delay = 4000;
+                dot.setAttribute('position', evt.detail.intersection.point);
+                dot.setAttribute('scale', '0.1 0.1 0.1');
+                dot.setAttribute('transparent', true);
+                new AFRAME.TWEEN.Tween({z: 0.0})
+                    .to({ z: -0.016 },delay)
+                    .easing(AFRAME.TWEEN.Easing.Quadratic.Out)
+                    .onUpdate(function () {
+                        var x = dot.components.position.data.x;
+                        var y = dot.components.position.data.y;
+                        var z = dot.components.position.data.z + this.z;
+                        dot.setAttribute('position',x + ' ' +y+' '+z);
+                    })
+                    .start();
+                new AFRAME.TWEEN.Tween({scale: 0.1})
+                    .to({ scale: 0.5 },delay)
+                    .easing(AFRAME.TWEEN.Easing.Quadratic.Out)
+                    .onUpdate(function () {
+                        dot.setAttribute('scale',this.scale + ' ' +this.scale+' '+this.scale);
+                    })
+                    .start();
+                setTimeout(function () { scene.removeChild(dot)}, delay);
+                scene.appendChild(dot);
+                shitNumber++;
+            })
             // track pad events
             socket.on('trackpad:touchstart', function () {
+                laserpointer.setAttribute('visible', false);
                 touchpadContactObj.setAttribute('visible',true);
+                shouldDrawShit = true;
             })
             socket.on('trackpad:touchmove', function (evt) {
                 var touchpadWidth = 0.75;
@@ -64,7 +110,9 @@
                 touchpadContactObj.setAttribute('position',touchpad_x+' '+touchpad_y+' '+touchpad_z);
             })
             socket.on('trackpad:touchend', function () {
+                laserpointer.setAttribute('visible', true);
                 touchpadContactObj.setAttribute('visible',false);
+                shouldDrawShit = false;
             })
             var trackpadColors = ['pink','orange','blue','yellow','green'];
             var trackpadColorIndex = 0;
