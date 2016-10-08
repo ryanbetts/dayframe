@@ -7,6 +7,13 @@ This is meant to help designers quickly create prototypes for Google's Daydream 
 
 ![fnDraw](demo.gif)
 
+Steps to view the live demo:
+
+1. Go to this URL on your computer: https://dayframe-demo.herokuapp.com/scene
+2. Go to this URL with your smartphone: https://dayframe-demo.herokuapp.com/remote
+
+Note: only one person at a time can control the remote. If you join, you will disconnect the previously connected remote.
+
 # Usage
 
 Before you start, make sure you've got Node and npm installed on your system.
