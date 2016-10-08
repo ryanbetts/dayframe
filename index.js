@@ -20,6 +20,8 @@ var daydreamState = {
     sceneConnected: false
 }
 
+var SCENES_ROOM = 'scenes';
+
 io.on('connection', function(socket){
 
     var broadcastToRemote = function (evtName, data) {
@@ -29,9 +31,7 @@ io.on('connection', function(socket){
     }
 
     var broadcastToScene = function (evtName, data) {
-        if (sockets.sceneId) {
-            socket.broadcast.to(sockets.sceneId).emit(evtName, data);
-        }
+        io.to(SCENES_ROOM).emit(evtName, data);
     }
 
     // figure out which type of client connected and broadcast a connection event
@@ -39,6 +39,7 @@ io.on('connection', function(socket){
         console.log('scene:connected');
         sockets.sceneId = socket.id;
         daydreamState.sceneConnected = true;
+        socket.join(SCENES_ROOM);
         broadcastToRemote('scene:connected', daydreamState)
     } else if (socket.handshake.query.type == 'remote') {
         console.log('remote:connected');
@@ -51,7 +52,7 @@ io.on('connection', function(socket){
     socket.emit('welcome', daydreamState);
 
     // handle disconnection events
-    socket.on('disconnect', function(){
+    socket.on('disconnect', function() {
         console.log('disconnect');
         if (socket.id == sockets.remoteId) {
             console.log('remote:disconnected');
