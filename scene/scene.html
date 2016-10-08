@@ -22,9 +22,9 @@
                 <a-box id="home-btn" position="0 .05 .7" rotation="0 0 0" width="0.4" height="0.1" depth="0.4"  color="#0000FF"></a-box>
             </a-entity>
             <a-entity position="0 2 -5" id="canvas" class="drawable">
-                <a-plane width="16" height="10" color="magenta"></a-plane>
+                <a-plane width="16" height="10" color="darkgrey"></a-plane>
             </a-entity>
-            <a-sky color="#ECECEC"></a-sky>
+            <a-sky color="white"></a-sky>
             <a-entity position="0 0 3.8">
                 <a-camera></a-camera>
             </a-entity>
@@ -99,7 +99,7 @@
                 var delay = 10000;
                 dot.setAttribute('position', evt.detail.intersection.point);
                 dot.setAttribute('scale', '0.1 0.1 0.1');
-                dot.setAttribute('transparent', true);
+                dot.setAttribute('color', trackpadColors[trackpadColorIndex]);
                 new AFRAME.TWEEN.Tween({z: 0.0})
                     .to({ z: -0.001 },delay)
                     .easing(AFRAME.TWEEN.Easing.Quadratic.Out)
@@ -142,9 +142,10 @@
             })
             var trackpadColors = ['pink','orange','blue','yellow','green'];
             var trackpadColorIndex = 0;
+            touchpadObj.setAttribute('color', trackpadColors[trackpadColorIndex]);
             socket.on('trackpad:click', function () {
-                touchpadObj.setAttribute('color', trackpadColors[trackpadColorIndex]);
                 trackpadColorIndex++;
+                touchpadObj.setAttribute('color', trackpadColors[trackpadColorIndex]);
                 if (trackpadColorIndex > trackpadColors.length-1) trackpadColorIndex = 0;
             });
 
