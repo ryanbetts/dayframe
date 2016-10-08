@@ -54,6 +54,32 @@
             // orientation events
             socket.on('orientation:change', function (evt) {
                 remote.setAttribute('rotation', evt);
+
+                // calculate the x_offset of the remote
+                // the y rotation determines the offset on the x axis
+                var shifted_y_rotation;
+                if (evt.y >= 0 && evt.y < 180) {
+                    // to the left: 0 is center and 180 is extreme left
+                    // shift to: 0 is center and -180 is extreme left
+                    shifted_y_rotation = evt.y * -1;
+                } else if (evt.y >= 180 && evt.y <= 360) {
+                    // to the right: 360 is center and 180 is extreme right
+                    // shift to: 0 is center and +180 is extreme left
+                    shifted_y_rotation = (evt.y-180) * -1 + 180;
+                }
+                var scaled_y_rotation = shifted_y_rotation / 45;
+                if (scaled_y_rotation > 1) scaled_y_rotation = 1;
+                var x_offset = scaled_y_rotation * 1.5;
+
+                // calculate the y_offset of the remote
+                // the x rotation determines the offset on the y axis
+                // thankfully, x already seems to face straight forward
+                var scaled_x_rotation = evt.x / 45;
+                if (scaled_x_rotation > 1) scaled_x_rotation = 1;
+                console.log(scaled_x_rotation);
+                var y_offset = scaled_x_rotation * 0.7; // until corrected
+
+                remote.setAttribute('position', x_offset+' '+y_offset+' 0');
             });
 
             var shitNumber = 0;
@@ -68,14 +94,14 @@
                 if (!shouldDrawShit) return;
                 var dot = document.createElement('a-sphere');
                 var newNow = new Date().getTime();
-                console.log('delay',now-newNow);
+                // console.log('delay',now-newNow);
                 now = newNow;
-                var delay = 4000;
+                var delay = 10000;
                 dot.setAttribute('position', evt.detail.intersection.point);
                 dot.setAttribute('scale', '0.1 0.1 0.1');
                 dot.setAttribute('transparent', true);
                 new AFRAME.TWEEN.Tween({z: 0.0})
-                    .to({ z: -0.016 },delay)
+                    .to({ z: -0.001 },delay)
                     .easing(AFRAME.TWEEN.Easing.Quadratic.Out)
                     .onUpdate(function () {
                         var x = dot.components.position.data.x;
@@ -85,7 +111,7 @@
                     })
                     .start();
                 new AFRAME.TWEEN.Tween({scale: 0.1})
-                    .to({ scale: 0.5 },delay)
+                    .to({ scale: 0.3 },delay)
                     .easing(AFRAME.TWEEN.Easing.Quadratic.Out)
                     .onUpdate(function () {
                         dot.setAttribute('scale',this.scale + ' ' +this.scale+' '+this.scale);
