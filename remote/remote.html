@@ -223,6 +223,7 @@
                 socket.emit('trackpad:touchend');
                 trackpadContactEl.classList.add('hidden');
             });
+            trackpadHammer.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
             trackpadHammer.on('doubletap', function (evt) {
                 socket.emit('trackpad:click');
             });
@@ -230,12 +231,15 @@
                 socket.emit('trackpad:swipeleft');
             });
             trackpadHammer.on('swiperight', function (evt) {
+                console.log('swiperight');
                 socket.emit('trackpad:swiperight');
             });
             trackpadHammer.on('swipeup', function (evt) {
+                console.log('swipeup');
                 socket.emit('trackpad:swipeup');
             });
             trackpadHammer.on('swipedown', function (evt) {
+                console.log('swipedown');
                 socket.emit('trackpad:swipedown');
             });
             homeBtnHammer.on('tap', function (evt) {
