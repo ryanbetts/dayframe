@@ -1,4 +1,5 @@
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
@@ -9,6 +10,8 @@ app.get('/remote', function(req, res){
 app.get('/scene', function(req, res){
     res.sendfile('scene/scene.html');
 });
+
+app.use(express.static('public'));
 
 var sockets = {
     sceneId: null,

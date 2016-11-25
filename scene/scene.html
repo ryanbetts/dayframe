@@ -76,7 +76,6 @@
                 // thankfully, x already seems to face straight forward
                 var scaled_x_rotation = evt.x / 45;
                 if (scaled_x_rotation > 1) scaled_x_rotation = 1;
-                console.log(scaled_x_rotation);
                 var y_offset = scaled_x_rotation * 0.7; // until corrected
 
                 remote.setAttribute('position', x_offset+' '+y_offset+' 0');
