@@ -7,6 +7,12 @@
         </style>
         <script src="https://aframe.io/releases/0.3.0/aframe.js"></script>
         <script src="/socket.io/socket.io.js"></script>
+        <script>
+            if(!!navigator.getGamepads){
+                var gamepads = navigator.getGamepads();
+                console.log(gamepads);
+            }
+        </script>
         <meta name="viewport" content="width=device-width, intial-scale=1"></meta>
     </head>
     <body>
@@ -74,11 +80,12 @@
                 // calculate the y_offset of the remote
                 // the x rotation determines the offset on the y axis
                 // thankfully, x already seems to face straight forward
-                var scaled_x_rotation = evt.x / 45;
-                if (scaled_x_rotation > 1) scaled_x_rotation = 1;
-                var y_offset = scaled_x_rotation * 0.7; // until corrected
+                // var scaled_x_rotation = evt.x / 45;
+                // if (scaled_x_rotation > 1) scaled_x_rotation = 1;
+                // var y_offset = scaled_x_rotation * 0.7; // until corrected
+                // console.log(y_offset);
 
-                remote.setAttribute('position', x_offset+' '+y_offset+' 0');
+                remote.setAttribute('position', x_offset+' 0 0');
             });
 
             var shitNumber = 0;
